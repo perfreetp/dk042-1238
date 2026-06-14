@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  body {
+    @apply bg-space-blue-950 text-gray-100 min-h-screen;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-space-blue-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-space-blue-700 rounded-full hover:bg-space-blue-600 transition-colors;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl;
+  }
+
+  .neon-border {
+    @apply border border-neon-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.3)];
+  }
+
+  .neon-text {
+    @apply text-neon-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)];
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-to-r from-neon-cyan-500 to-electric-purple-500 
+           text-white font-semibold rounded-lg transition-all duration-300
+           hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] hover:scale-105
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 
+           text-white font-semibold rounded-lg transition-all duration-300
+           hover:bg-white/20 hover:border-white/30
+           active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 
+           rounded-lg transition-all duration-300;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg
+           text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan-400/50
+           focus:shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-neon-cyan-400 via-electric-purple-400 to-neon-cyan-400
+           bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient;
+  }
+
+  .tag {
+    @apply inline-flex items-center px-3 py-1 text-sm rounded-full
+           bg-neon-cyan-500/10 text-neon-cyan-400 border border-neon-cyan-400/20;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full;
+  }
+
+  .status-pending {
+    @apply bg-yellow-500/10 text-yellow-400 border border-yellow-400/20;
+  }
+
+  .status-approved {
+    @apply bg-jade-green-500/10 text-jade-green-400 border border-jade-green-400/20;
+  }
+
+  .status-rejected {
+    @apply bg-coral-red-500/10 text-coral-red-400 border border-coral-red-400/20;
+  }
+}
