@@ -8,6 +8,13 @@ export const userAPI = {
       url: `/users/${id}`,
     }),
 
+  updateProfile: (data: { username?: string; bio?: string; avatar?: string }) =>
+    request<User>({
+      method: 'PUT',
+      url: '/users/profile',
+      data,
+    }),
+
   getProjects: (id: number) =>
     request<Project[]>({
       method: 'GET',

@@ -8,6 +8,7 @@ import Register from "@/pages/Register";
 import Profile from "@/pages/Profile";
 import Collections from "@/pages/Collections";
 import AdminDashboard from "@/pages/AdminDashboard";
+import TopicDetail from "@/pages/TopicDetail";
 import { useAuthStore } from "@/store/authStore";
 import { useEffect } from "react";
 
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/project/:id" element={<ProjectDetail />} />
         <Route path="/author/:id" element={<Author />} />
+        <Route path="/topic/:id" element={<TopicDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         

@@ -19,6 +19,10 @@ import {
   AlertTriangle as AlertTriangleIcon,
   Star,
   StarOff,
+  Plus,
+  Pencil,
+  Trash2,
+  Save,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -27,6 +31,13 @@ import { useAuthStore } from '@/store/authStore';
 import type { Project } from '../../shared/types/index.js';
 
 type TabType = 'overview' | 'pending' | 'all' | 'topics' | 'broken';
+
+interface TopicFormData {
+  title: string;
+  description: string;
+  coverImage: string;
+  projectIds: number[];
+}
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -43,6 +54,16 @@ export default function AdminDashboard() {
     topics: true,
   });
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+
+  const [showTopicModal, setShowTopicModal] = useState(false);
+  const [editingTopicId, setEditingTopicId] = useState<number | null>(null);
+  const [topicFormLoading, setTopicFormLoading] = useState(false);
+  const [topicForm, setTopicForm] = useState<TopicFormData>({
+    title: '',
+    description: '',
+    coverImage: '',
+    projectIds: [],
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -173,6 +194,97 @@ export default function AdminDashboard() {
       setActionLoading(null);
     }
   };
+
+  const handleOpenCreateTopic = () => {
+    setEditingTopicId(null);
+    setTopicForm({
+      title: '',
+      description: '',
+      coverImage: '',
+      projectIds: [],
+    });
+    setShowTopicModal(true);
+  };
+
+  const handleOpenEditTopic = (topic: any) => {
+    setEditingTopicId(topic.id);
+    setTopicForm({
+      title: topic.title || '',
+      description: topic.description || '',
+      coverImage: topic.coverImage || '',
+      projectIds: topic.projectIds || [],
+    });
+    setShowTopicModal(true);
+  };
+
+  const handleCloseTopicModal = () => {
+    setShowTopicModal(false);
+    setEditingTopicId(null);
+  };
+
+  const handleTopicFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setTopicForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleToggleProjectInTopic = (projectId: number) => {
+    setTopicForm((prev) => {
+      const exists = prev.projectIds.includes(projectId);
+      return {
+        ...prev,
+        projectIds: exists
+          ? prev.projectIds.filter((id) => id !== projectId)
+          : [...prev.projectIds, projectId],
+      };
+    });
+  };
+
+  const handleSaveTopic = async () => {
+    if (!topicForm.title.trim()) {
+      alert('请输入专题标题');
+      return;
+    }
+    try {
+      setTopicFormLoading(true);
+      if (editingTopicId) {
+        const res = await adminAPI.updateTopic(editingTopicId, topicForm);
+        if (res.code === 200) {
+          alert('专题更新成功！');
+          handleCloseTopicModal();
+          loadTopics();
+        }
+      } else {
+        const res = await adminAPI.createTopic(topicForm);
+        if (res.code === 200) {
+          alert('专题创建成功！');
+          handleCloseTopicModal();
+          loadTopics();
+        }
+      }
+    } catch (err: any) {
+      alert(err.message || '操作失败');
+    } finally {
+      setTopicFormLoading(false);
+    }
+  };
+
+  const handleDeleteTopic = async (topicId: number, title: string) => {
+    if (!confirm(`确定要删除专题「${title}」吗？此操作不可恢复。`)) return;
+    try {
+      setActionLoading(topicId);
+      const res = await adminAPI.deleteTopic(topicId);
+      if (res.code === 200) {
+        alert('专题已删除！');
+        loadTopics();
+      }
+    } catch (err: any) {
+      alert(err.message || '删除失败');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const approvedProjects = allProjects.filter((p) => p.status === 'approved');
 
   const tabs = [
     { id: 'overview', label: '数据概览', icon: LayoutDashboard },
@@ -598,8 +710,11 @@ export default function AdminDashboard() {
             <div className="glass-card p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-xl font-bold text-white">专题管理</h2>
-                <button className="btn-primary text-sm flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
+                <button
+                  onClick={handleOpenCreateTopic}
+                  className="btn-primary text-sm flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
                   新建专题
                 </button>
               </div>
@@ -631,10 +746,24 @@ export default function AdminDashboard() {
                             {topic.projectIds?.length || 0} 个项目
                           </span>
                           <div className="flex gap-2">
-                            <button className="px-3 py-1 rounded-lg bg-white/10 text-white text-sm hover:bg-white/20 transition-colors">
+                            <button
+                              onClick={() => handleOpenEditTopic(topic)}
+                              disabled={actionLoading === topic.id}
+                              className="px-3 py-1.5 rounded-lg bg-white/10 text-white text-sm hover:bg-white/20 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
                               编辑
                             </button>
-                            <button className="px-3 py-1 rounded-lg bg-coral-red-500/20 text-coral-red-400 text-sm hover:bg-coral-red-500/30 transition-colors">
+                            <button
+                              onClick={() => handleDeleteTopic(topic.id, topic.title)}
+                              disabled={actionLoading === topic.id}
+                              className="px-3 py-1.5 rounded-lg bg-coral-red-500/20 text-coral-red-400 text-sm hover:bg-coral-red-500/30 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                            >
+                              {actionLoading === topic.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
                               删除
                             </button>
                           </div>
@@ -649,6 +778,144 @@ export default function AdminDashboard() {
                   <p className="text-gray-400">暂无专题，点击上方按钮创建第一个专题</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Topic Form Modal */}
+          {showTopicModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <div className="glass-card p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-display text-xl font-bold text-white">
+                    {editingTopicId ? '编辑专题' : '新建专题'}
+                  </h3>
+                  <button
+                    onClick={handleCloseTopicModal}
+                    className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      专题标题 <span className="text-coral-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={topicForm.title}
+                      onChange={handleTopicFormChange}
+                      placeholder="输入专题标题"
+                      className="input-field"
+                      maxLength={50}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      专题描述
+                    </label>
+                    <textarea
+                      name="description"
+                      value={topicForm.description}
+                      onChange={handleTopicFormChange}
+                      placeholder="输入专题描述"
+                      className="input-field min-h-[100px] resize-none"
+                      maxLength={200}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      封面图片 URL
+                    </label>
+                    <input
+                      type="text"
+                      name="coverImage"
+                      value={topicForm.coverImage}
+                      onChange={handleTopicFormChange}
+                      placeholder="输入封面图片链接，留空将使用默认封面"
+                      className="input-field"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      收录项目
+                      <span className="text-gray-400 font-normal ml-2">
+                        (已选 {topicForm.projectIds.length} 个)
+                      </span>
+                    </label>
+                    {loading.all ? (
+                      <div className="space-y-2">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="h-12 bg-white/5 rounded-lg animate-pulse" />
+                        ))}
+                      </div>
+                    ) : approvedProjects.length > 0 ? (
+                      <div className="max-h-60 overflow-y-auto space-y-2 pr-2 border border-white/10 rounded-xl p-3">
+                        {approvedProjects.map((project) => (
+                          <label
+                            key={project.id}
+                            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                              topicForm.projectIds.includes(project.id)
+                                ? 'bg-neon-cyan-500/10 border border-neon-cyan-400/30'
+                                : 'bg-white/5 hover:bg-white/10 border border-transparent'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={topicForm.projectIds.includes(project.id)}
+                              onChange={() => handleToggleProjectInTopic(project.id)}
+                              className="w-4 h-4 rounded accent-neon-cyan-400"
+                            />
+                            <img
+                              src={project.coverImage}
+                              alt={project.title}
+                              className="w-10 h-10 rounded object-cover flex-shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-white text-sm truncate">
+                                {project.title}
+                              </div>
+                              <div className="text-xs text-gray-400 truncate">
+                                {project.description}
+                              </div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-400 text-sm bg-white/5 rounded-xl">
+                        暂无已审核通过的项目
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-8">
+                  <button
+                    onClick={handleCloseTopicModal}
+                    className="flex-1 btn-secondary"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={handleSaveTopic}
+                    disabled={topicFormLoading}
+                    className="flex-1 btn-primary disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {topicFormLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
+                    {editingTopicId ? '保存修改' : '创建专题'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

@@ -55,8 +55,8 @@ export default function Login() {
 
   const handleDemoLogin = async (role: 'user' | 'admin') => {
     const demoCredentials = role === 'admin'
-      ? { email: 'admin@example.com', password: 'admin123' }
-      : { email: 'demo@example.com', password: 'demo123' };
+      ? { email: 'admin@aiplaza.com', password: 'admin123' }
+      : { email: 'user@example.com', password: 'admin123' };
     setFormData(demoCredentials);
     try {
       setLoading(true);
@@ -181,22 +181,24 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <button
                 type="button"
                 onClick={() => handleDemoLogin('user')}
                 disabled={loading}
-                className="btn-secondary text-sm disabled:opacity-50"
+                className="btn-secondary text-sm disabled:opacity-50 text-left"
               >
-                  普通用户
+                <div className="font-medium">普通用户登录</div>
+                <div className="text-xs text-gray-400 mt-1">user@example.com / admin123</div>
               </button>
               <button
                 type="button"
                 onClick={() => handleDemoLogin('admin')}
                 disabled={loading}
-                className="btn-secondary text-sm disabled:opacity-50"
+                className="btn-secondary text-sm disabled:opacity-50 text-left"
               >
-                  管理员
+                <div className="font-medium">管理员登录</div>
+                <div className="text-xs text-gray-400 mt-1">admin@aiplaza.com / admin123</div>
               </button>
             </div>
 

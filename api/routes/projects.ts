@@ -85,16 +85,25 @@ router.get('/', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.get('/hot', async (req, res: Response) => {
+router.get('/hot', async (req: AuthRequest, res: Response) => {
   try {
     const { limit = '10' } = req.query;
+    const userId = req.user?.id;
+    const likeJoin = userId ? `LEFT JOIN likes l ON l.project_id = p.id AND l.user_id = ${userId}` : '';
+    const favoriteJoin = userId ? `LEFT JOIN favorites f ON f.project_id = p.id AND f.user_id = ${userId}` : '';
+    const likeField = userId ? ', l.id IS NOT NULL as is_liked' : '';
+    const favoriteField = userId ? ', f.id IS NOT NULL as is_favorited' : '';
+
     const sql = `
       SELECT p.*,
         c.name as category_name, c.slug as category_slug, c.icon as category_icon,
         u.username as author_username, u.avatar as author_avatar
+        ${likeField}${favoriteField}
       FROM projects p
       LEFT JOIN categories c ON p.category_id = c.id
       LEFT JOIN users u ON p.author_id = u.id
+      ${likeJoin}
+      ${favoriteJoin}
       WHERE p.status = 'approved'
       ORDER BY (p.likes_count + p.favorites_count * 2 + p.views_count / 10) DESC
       LIMIT ?

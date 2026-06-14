@@ -174,6 +174,48 @@ export default function ProjectDetail() {
     }
   };
 
+  const handleRelatedLike = async (projectId: number) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    const res = await projectAPI.like(projectId);
+    if (res.code === 200 && res.data) {
+      setRelatedProjects((prev) =>
+        prev.map((p) =>
+          p.id === projectId
+            ? {
+                ...p,
+                isLiked: res.data!.liked,
+                likesCount: res.data!.liked ? p.likesCount + 1 : p.likesCount - 1,
+              }
+            : p
+        )
+      );
+    }
+  };
+
+  const handleRelatedFavorite = async (projectId: number) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    const res = await projectAPI.favorite(projectId);
+    if (res.code === 200 && res.data) {
+      setRelatedProjects((prev) =>
+        prev.map((p) =>
+          p.id === projectId
+            ? {
+                ...p,
+                isFavorited: res.data!.favorited,
+                favoritesCount: res.data!.favorited ? p.favoritesCount + 1 : p.favoritesCount - 1,
+              }
+            : p
+        )
+      );
+    }
+  };
+
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
@@ -739,8 +781,8 @@ export default function ProjectDetail() {
                 <ProjectCard
                   key={p.id}
                   project={p}
-                  onLike={() => handleLike()}
-                  onFavorite={() => handleFavorite()}
+                  onLike={() => handleRelatedLike(p.id)}
+                  onFavorite={() => handleRelatedFavorite(p.id)}
                 />
               ))}
             </div>

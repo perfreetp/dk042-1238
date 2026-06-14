@@ -17,6 +17,7 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuthStore } from '@/store/authStore';
+import { userAPI } from '@/api/users';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -51,18 +52,19 @@ export default function Profile() {
   const handleSave = async () => {
     try {
       setLoading(true);
-      // 实际项目中这里应该调用更新用户信息的API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // 更新store中的用户信息
-      useAuthStore.getState().setUser({
-        ...user!,
+      const res = await userAPI.updateProfile({
         username: formData.username,
         bio: formData.bio,
       });
-      setEditing(false);
-      alert('个人信息已更新！');
-    } catch (err) {
-      alert('更新失败，请稍后重试');
+      if (res.code === 200 && res.data) {
+        useAuthStore.getState().setUser(res.data);
+        setEditing(false);
+        alert('个人信息已更新！');
+      } else {
+        throw new Error(res.message || '更新失败');
+      }
+    } catch (err: any) {
+      alert(err.message || '更新失败，请稍后重试');
     } finally {
       setLoading(false);
     }
